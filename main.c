@@ -12,12 +12,48 @@ typedef struct HEADER_TAG {
     long magic_number; /* 0x0123456789ABCDEFL */
 } HEADER;
 
-//function protoype
-void magic_check(void* ptr);
+//function protoypes
+void magic_check(void *ptr);
+
+void *request_mem(size_t size);
+
+//global variables
 HEADER *free_memory = NULL;
-int oopsie=0;
+int oopsie = 0;
 
 void *malloc3is(size_t size) {
+    if (free_memory == NULL) {
+        return request_mem(size);
+    }
+    HEADER *p = free_memory;
+    while (p->ptr_next != NULL) {
+        p = p->ptr_next;
+        if (size == p->bloc_size) {
+            return ++p;
+        }
+    }
+    return request_mem(size); //typed pointer
+}
+
+
+void free3is(void *ptr) {
+    magic_check(ptr);
+    if (free_memory == NULL) {
+        free_memory = (HEADER *) (ptr - sizeof(HEADER));
+    } else {
+        free_memory->ptr_previous = free_memory;
+        free_memory->ptr_next = (HEADER *) (ptr - sizeof(HEADER));
+    }
+}
+
+void magic_check(void *ptr) {
+    const HEADER *header = (HEADER *) ptr - sizeof(HEADER);
+    if (header->magic_number != MAGIC_NUMBER) {
+        oopsie++;
+    }
+}
+
+void *request_mem(size_t size) {
     void *request = sbrk(sizeof(HEADER) + size + sizeof(MAGIC_NUMBER));
     if (request == (void *) -1) {
         return NULL; // sbrk failed.
@@ -30,25 +66,7 @@ void *malloc3is(size_t size) {
     *((long long *) (new_header + sizeof(HEADER) + size)) = MAGIC_NUMBER;
 
 
-    return ++new_header; //typed pointer
-}
-
-
-void free3is(void *ptr) {
-    magic_check(ptr);
-    if (free_memory == NULL) {
-        free_memory = (HEADER*)(ptr-sizeof(HEADER));
-    } else {
-        free_memory->ptr_previous = free_memory;
-        free_memory->ptr_next = (HEADER *) (ptr-sizeof(HEADER));
-    }
-}
-
-void magic_check(void* ptr) {
-    const HEADER* header = (HEADER *) ptr-sizeof(HEADER);
-    if (header->magic_number != MAGIC_NUMBER) {
-        oopsie++;
-    }
+    return ++new_header;
 }
 
 int main(void) {
@@ -58,11 +76,11 @@ int main(void) {
     printf("%p\n", p);
     printf("%p\n", p2);
     printf("%lu\n", sizeof(HEADER) + sizeof(MAGIC_NUMBER));
-    p= "feurfeurfeurfeurfeurfeur";
-    printf("%p\n",free_memory );
+    p = "feurfeurfeurfeurfeurfeur";
+    printf("%p\n", free_memory);
     free3is(p);
-    printf("%i\n",oopsie);
-    printf("%p\n",free_memory );
+    printf("%i\n", oopsie);
+    printf("%p\n", free_memory);
     free3is(p2);
-    printf("%p\n",free_memory->ptr_next );
+    printf("%p\n", free_memory->ptr_next);
 }
