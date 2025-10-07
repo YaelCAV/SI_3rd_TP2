@@ -15,21 +15,21 @@ typedef struct HEADER_TAG {
 HEADER *free_memory = NULL;
 
 void *malloc3is(size_t size) {
-    void *p = sbrk(0);
+
     void *request = sbrk(sizeof(HEADER) + size + sizeof(MAGIC_NUMBER));
     if (request == (void *) -1) {
             return NULL; // sbrk failed.
         }
 
     //initialisation du header + block
-    HEADER *new_header = (HEADER *) request;
+    HEADER *new_header = request;
     new_header->bloc_size = size;
     new_header->magic_number = MAGIC_NUMBER;
     *((long long *) (new_header + sizeof(HEADER) + size)) = MAGIC_NUMBER;
 
 
-    assert(p == new_header);
-    return new_header;
+
+    return ++new_header; //typed pointer
 }
 
 
