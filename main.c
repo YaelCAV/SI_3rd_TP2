@@ -34,10 +34,10 @@ void *malloc3is(size_t size) {
 
 void free3is(void *ptr) {
     if (free_memory == NULL) {
-        free_memory = --ptr;
+        free_memory = (HEADER*)(ptr-sizeof(HEADER));
     } else {
         free_memory->ptr_previous = free_memory;
-        free_memory->ptr_next = (HEADER *) (--ptr);
+        free_memory->ptr_next = (HEADER *) (ptr-sizeof(HEADER));
     }
 }
 
@@ -52,4 +52,6 @@ int main(void) {
     printf("%p\n",free_memory );
     free3is(p);
     printf("%p\n",free_memory );
+    free3is(p2);
+    printf("%p\n",free_memory->ptr_next );
 }
